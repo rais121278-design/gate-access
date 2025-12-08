@@ -302,7 +302,7 @@
     </div>
 
     <script>
-        const SHEET_ID = '1VGc3mM7WiH-ivI5A59ui4xP7pQYiimp3bnPHu4jjbUA';
+        const SCRIPT_URL = 'https://script.googleapis.com/macros/d/AKfycbzQVkf9dq6YXTgItzqLiNy72qx7XQjB7XaiW8jeYF1ZZpeFXTXfEMLSItp7V9Jck4NhBA/usercoderun';
         const GROUP_LINK = 'https://max.im/group/YOUR_GROUP_ID';
 
         const form = document.getElementById('accessForm');
@@ -320,13 +320,8 @@
             resultDiv.style.display = 'none';
 
             try {
-                // Используем корс-прокси для обхода CORS
-                const url = `https://cors-anywhere.herokuapp.com/https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
-                const response = await fetch(url);
-                const csvText = await response.text();
-                
-                // Парсим CSV
-                const rows = csvText.split('\n').map(row => row.split(','));
+                const response = await fetch(SCRIPT_URL);
+                const rows = await response.json();
                 
                 let found = false;
 
@@ -334,10 +329,10 @@
                     const row = rows[i];
                     if (!row || row.length < 4) continue;
 
-                    const rowUchastok = row[0]?.trim() || '';
-                    const rowPhone = (row[1]?.trim() || '').replace(/\D/g, '');
-                    const rowFio = (row[2]?.trim() || '').toLowerCase();
-                    const rowStatus = row[3]?.trim() || '';
+                    const rowUchastok = String(row[0] || '').trim();
+                    const rowPhone = String(row[1] || '').trim().replace(/\D/g, '');
+                    const rowFio = String(row[2] || '').trim().toLowerCase();
+                    const rowStatus = String(row[3] || '').trim();
 
                     const inputPhone = phone.replace(/\D/g, '');
 
@@ -357,7 +352,7 @@
                         loading.style.display = 'none';
 
                         if (rowStatus === 'В группе') {
-                            showSuccess(row[2]?.trim() || 'Пользователь');
+                            showSuccess(row[2] || 'Пользователь');
                         } else {
                             showError('Ваш доступ находится на рассмотрении. Пожалуйста, дождитесь подтверждения.');
                         }
