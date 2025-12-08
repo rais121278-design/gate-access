@@ -302,11 +302,7 @@
     </div>
 
     <script>
-        // ID вашей Google Таблицы
         const SHEET_ID = '1VGc3mM7WiH-ivI5A59ui4xP7pQYiimp3bnPHu4jjbUA';
-        const SHEET_NAME = 'Лист1';
-        
-        // Ссылка на группу Max (измени на свою)
         const GROUP_LINK = 'https://max.im/group/YOUR_GROUP_ID';
 
         const form = document.getElementById('accessForm');
@@ -318,28 +314,62 @@
 
             const uchastok = document.getElementById('uchastok').value.trim();
             const phone = document.getElementById('phone').value.trim();
-            const fio = document.getElementById('fio').value.trim();
-
-            // Нормализуем номер телефона
-            const normalizedPhone = normalizePhone(phone);
+            const fio = document.getElementById('fio').value.trim().toLowerCase();
 
             loading.style.display = 'block';
             resultDiv.style.display = 'none';
 
             try {
-                // Получаем данные из Google Sheets
-                const data = await fetchSheetData();
-                const user = checkUserAccess(data, uchastok, normalizedPhone, fio);
+                const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+                const response = await fetch(url);
+                const text = await response.text();
+                
+                const json = JSON.parse(text.substring(47).slice(0, -2));
+                
+                let found = false;
 
-                loading.style.display = 'none';
+                if (json.table && json.table.rows) {
+                    for (let i = 0; i < json.table.rows.length; i++) {
+                        const row = json.table.rows[i];
+                        if (!row.c || row.c.length < 4) continue;
 
-                if (user && user.status === 'В группе') {
-                    showSuccess(user);
-                } else if (user) {
-                    showError('Ваш доступ находится на рассмотрении. Пожалуйста, дождитесь подтверждения.');
-                } else {
-                    showError('Доступ запрещён. Ваши данные не найдены в системе.');
+                        const rowUchastok = String(row.c[0]?.v || '').trim();
+                        const rowPhone = String(row.c[1]?.v || '').trim().replace(/\D/g, '');
+                        const rowFio = String(row.c[2]?.v || '').trim().toLowerCase();
+                        const rowStatus = String(row.c[3]?.v || '').trim();
+
+                        const inputPhone = phone.replace(/\D/g, '');
+
+                        console.log('Проверка:', {
+                            rowUchastok, uchastok,
+                            rowPhone, inputPhone,
+                            rowFio, fio,
+                            rowStatus
+                        });
+
+                        if (
+                            rowUchastok === uchastok &&
+                            rowPhone === inputPhone &&
+                            rowFio.includes(fio)
+                        ) {
+                            found = true;
+                            loading.style.display = 'none';
+
+                            if (rowStatus === 'В группе') {
+                                showSuccess(row.c[2]?.v || 'Пользователь');
+                            } else {
+                                showError('Ваш доступ находится на рассмотрении. Пожалуйста, дождитесь подтверждения.');
+                            }
+                            break;
+                        }
+                    }
                 }
+
+                if (!found) {
+                    loading.style.display = 'none';
+                    showError('Данные которые вы ввели не позволяют вас пригласить в чат!');
+                }
+
             } catch (error) {
                 loading.style.display = 'none';
                 console.error('Ошибка:', error);
@@ -347,69 +377,13 @@
             }
         });
 
-        function normalizePhone(phone) {
-            // Убираем всё кроме цифр
-            const digits = phone.replace(/\D/g, '');
-            // Если 11 цифр начиная с 7 или 8, нормализуем
-            if (digits.length === 11) {
-                return '7' + digits.slice(1);
-            }
-            return digits;
-        }
-
-        async function fetchSheetData() {
-            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
-            const response = await fetch(url);
-            const text = await response.text();
-            
-            // Парсим Google Visualization API ответ
-            const json = JSON.parse(text.substring(47).slice(0, -2));
-            
-            const rows = [];
-            if (json.table && json.table.rows) {
-                json.table.rows.forEach(row => {
-                    rows.push(row.c.map(cell => cell ? cell.v : ''));
-                });
-            }
-            
-            return rows;
-        }
-
-        function checkUserAccess(data, uchastok, phone, fio) {
-            // Первая строка - заголовки, пропускаем
-            for (let i = 1; i < data.length; i++) {
-                const row = data[i];
-                if (row.length < 4) continue;
-
-                const rowUchastok = String(row[0]).trim();
-                const rowPhone = normalizePhone(String(row[1]).trim());
-                const rowFio = String(row[2]).trim().toLowerCase();
-                const rowStatus = String(row[3]).trim();
-
-                // Проверяем совпадение (нечувствительно к регистру для ФИО)
-                if (
-                    rowUchastok === uchastok &&
-                    rowPhone === phone &&
-                    rowFio.includes(fio.toLowerCase())
-                ) {
-                    return {
-                        fio: row[2],
-                        status: rowStatus,
-                        id: row[4] || ''
-                    };
-                }
-            }
-            
-            return null;
-        }
-
-        function showSuccess(user) {
+        function showSuccess(fio) {
             resultDiv.innerHTML = `
                 <div class="result-title">
                     ✓ Доступ разрешён
                 </div>
                 <div class="result-message">
-                    Добро пожаловать, ${user.fio}! Вам открыт доступ в группу.
+                    Добро пожаловать, ${fio}! Вам открыт доступ в группу.
                 </div>
                 <a href="${GROUP_LINK}" target="_blank" class="access-link">
                     → Перейти в группу
@@ -429,3 +403,10 @@
                     ${message}
                 </div>
             `;
+            resultDiv.classList.remove('success');
+            resultDiv.classList.add('error');
+            resultDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
