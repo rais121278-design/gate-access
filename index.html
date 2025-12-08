@@ -137,9 +137,15 @@
         }
 
         button:disabled {
-            opacity: 0.5;
+            opacity: 0.6;
             cursor: not-allowed;
             transform: none;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 0.8; }
         }
 
         .result {
@@ -290,26 +296,64 @@
         const CSV_URL = 'https://raw.githubusercontent.com/rais121278-design/gate-access/main/%D0%9B%D0%B8%D1%81%D1%821.csv';
         const GROUP_LINK = 'https://max.im/group/YOUR_GROUP_ID';
 
+        // N8N Webhook URL
+        const WEBHOOK_URL = 'https://n8n.dewiar.com/webhook/6d28992b-ba37-4944-a5cc-f7bc3bc51e44';
+
         const form = document.getElementById('accessForm');
         const resultDiv = document.getElementById('result');
         const loading = document.getElementById('loading');
+        const submitButton = form.querySelector('button[type="submit"]');
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const uchastok = document.getElementById('uchastok').value.trim();
             const phone = document.getElementById('phone').value.trim();
-            const fio = document.getElementById('fio').value.trim().toLowerCase();
+            const fio = document.getElementById('fio').value.trim();
 
+            // Валидация
+            if (!uchastok || !phone || !fio) {
+                showError('Пожалуйста, заполните все поля');
+                return;
+            }
+
+            // Показываем загрузку
             loading.style.display = 'block';
             resultDiv.style.display = 'none';
+            submitButton.disabled = true;
+            submitButton.textContent = 'ОБРАБОТКА...';
 
             try {
+                // 1. ОТПРАВЛЯЕМ ДАННЫЕ В N8N (для записи в Google Sheets)
+                const currentDate = new Date().toLocaleDateString('ru-RU', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+
+                const params = new URLSearchParams({
+                    uchastok: uchastok,
+                    phone: phone,
+                    fio: fio,
+                    status: 'Ожидает проверку',
+                    max_id: Date.now(),
+                    data_vhoda: currentDate
+                });
+
+                // Отправляем в n8n (не блокируем выполнение)
+                fetch(`${WEBHOOK_URL}?${params}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                }).catch(err => console.log('N8N запрос:', err));
+
+                // 2. ПРОВЕРЯЕМ ДОСТУП ПО CSV
                 const response = await fetch(CSV_URL);
                 const csvText = await response.text();
                 const rows = csvText.split('\n').map(row => row.split(','));
 
                 let found = false;
+                const inputPhone = phone.replace(/\D/g, '');
+                const inputFio = fio.toLowerCase();
 
                 for (let i = 1; i < rows.length; i++) {
                     const row = rows[i];
@@ -320,11 +364,7 @@
                     const rowFio = (row[2]?.trim() || '').toLowerCase();
                     const rowStatus = row[3]?.trim() || '';
 
-                    const inputPhone = phone.replace(/\D/g, '');
-
-                    console.log('Проверка:', { rowUchastok, uchastok, rowPhone, inputPhone, rowFio, fio, rowStatus });
-
-                    if (rowUchastok === uchastok && rowPhone === inputPhone && rowFio.includes(fio)) {
+                    if (rowUchastok === uchastok && rowPhone === inputPhone && rowFio.includes(inputFio)) {
                         found = true;
                         loading.style.display = 'none';
 
@@ -346,13 +386,16 @@
                 loading.style.display = 'none';
                 console.error('Ошибка:', error);
                 showError('Ошибка при проверке. Попробуйте позже.');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'ПРОВЕРИТЬ ДОСТУП';
             }
         });
 
-        function showSuccess(fio) {
+        function showSuccess(fioName) {
             resultDiv.innerHTML = `
                 <div class="result-title">✓ Доступ разрешён</div>
-                <div class="result-message">Добро пожаловать, ${fio}! Вам открыт доступ в группу.</div>
+                <div class="result-message">Добро пожаловать, ${fioName}! Вам открыт доступ в группу.</div>
                 <a href="${GROUP_LINK}" target="_blank" class="access-link">→ Перейти в группу</a>
             `;
             resultDiv.classList.remove('error');
@@ -369,6 +412,10 @@
             resultDiv.classList.add('error');
             resultDiv.style.display = 'block';
         }
-    </script>
-</body>
-</html>
+
+        // Валидация телефона при вводе
+        document.getElementById('phone').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 11) value = value.slice(0, 11);
+            e.target.value = value;
+        });
