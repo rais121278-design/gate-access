@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Контроль входа</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            color: #e0e0e0;
+        }
+
+        .container {
+            background: rgba(25, 25, 40, 0.95);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            border-radius: 16px;
+            padding: 48px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(76, 175, 80, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #4caf50;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .logo::before {
+            content: "🔒";
+            font-size: 24px;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #ffffff;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: #999;
+            margin-top: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #b0b0b0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid rgba(76, 175, 80, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #e0e0e0;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        input:hover {
+            border-color: rgba(76, 175, 80, 0.4);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #4caf50;
+            background: rgba(76, 175, 80, 0.1);
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+
+        input::placeholder {
+            color: #666;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result {
+            margin-top: 24px;
+            padding: 16px;
+            border-radius: 8px;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result.success {
+            background: rgba(76, 175, 80, 0.15);
+            border: 1px solid rgba(76, 175, 80, 0.4);
+            color: #81c784;
+        }
+
+        .result.error {
+            background: rgba(244, 67, 54, 0.15);
+            border: 1px solid rgba(244, 67, 54, 0.4);
+            color: #ef5350;
+        }
+
+        .result-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .result-message {
+            font-size: 13px;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        .access-link {
+            display: inline-block;
+            background: rgba(76, 175, 80, 0.25);
+            padding: 10px 14px;
+            border-radius: 6px;
+            color: #81c784;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            word-break: break-all;
+        }
+
+        .access-link:hover {
+            background: rgba(76, 175, 80, 0.35);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #4caf50;
+            margin-top: 16px;
+            font-size: 13px;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(76, 175, 80, 0.3);
+            border-top-color: #4caf50;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 32px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 32px 24px;
+                margin: 16px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">Контроль входа</div>
+            <h1>Проверка доступа</h1>
+            <p class="subtitle">Введите свои данные для проверки</p>
+        </div>
+
+        <form id="accessForm">
+            <div class="form-group">
+                <label for="uchastok">Номер участка</label>
+                <input 
+                    type="text" 
+                    id="uchastok" 
+                    placeholder="Например: 105" 
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Номер телефона</label>
+                <input 
+                    type="tel" 
+                    id="phone" 
+                    placeholder="7999XXXXXXX" 
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="fio">ФИО</label>
+                <input 
+                    type="text" 
+                    id="fio" 
+                    placeholder="Ваше полное имя" 
+                    required
+                >
+            </div>
+
+            <button type="submit">Проверить доступ</button>
+
+            <div class="loading" id="loading">
+                <span class="spinner"></span>
+                <span>Проверка данных...</span>
+            </div>
+        </form>
+
+        <div class="result" id="result"></div>
+
+        <div class="footer">
+            <p>Защищённая система проверки доступа</p>
+        </div>
+    </div>
+
+    <script>
+        // ID вашей Google Таблицы
+        const SHEET_ID = '1VGc3mM7WiH-ivI5A59ui4xP7pQYiimp3bnPHu4jjbUA';
+        const SHEET_NAME = 'Лист1';
+        
+        // Ссылка на группу Max (измени на свою)
+        const GROUP_LINK = 'https://max.im/group/YOUR_GROUP_ID';
+
+        const form = document.getElementById('accessForm');
+        const resultDiv = document.getElementById('result');
+        const loading = document.getElementById('loading');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const uchastok = document.getElementById('uchastok').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const fio = document.getElementById('fio').value.trim();
+
+            // Нормализуем номер телефона
+            const normalizedPhone = normalizePhone(phone);
+
+            loading.style.display = 'block';
+            resultDiv.style.display = 'none';
+
+            try {
+                // Получаем данные из Google Sheets
+                const data = await fetchSheetData();
+                const user = checkUserAccess(data, uchastok, normalizedPhone, fio);
+
+                loading.style.display = 'none';
+
+                if (user && user.status === 'В группе') {
+                    showSuccess(user);
+                } else if (user) {
+                    showError('Ваш доступ находится на рассмотрении. Пожалуйста, дождитесь подтверждения.');
+                } else {
+                    showError('Доступ запрещён. Ваши данные не найдены в системе.');
+                }
+            } catch (error) {
+                loading.style.display = 'none';
+                console.error('Ошибка:', error);
+                showError('Ошибка при проверке. Попробуйте позже.');
+            }
+        });
+
+        function normalizePhone(phone) {
+            // Убираем всё кроме цифр
+            const digits = phone.replace(/\D/g, '');
+            // Если 11 цифр начиная с 7 или 8, нормализуем
+            if (digits.length === 11) {
+                return '7' + digits.slice(1);
+            }
+            return digits;
+        }
+
+        async function fetchSheetData() {
+            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+            const response = await fetch(url);
+            const text = await response.text();
+            
+            // Парсим Google Visualization API ответ
+            const json = JSON.parse(text.substring(47).slice(0, -2));
+            
+            const rows = [];
+            if (json.table && json.table.rows) {
+                json.table.rows.forEach(row => {
+                    rows.push(row.c.map(cell => cell ? cell.v : ''));
+                });
+            }
+            
+            return rows;
+        }
+
+        function checkUserAccess(data, uchastok, phone, fio) {
+            // Первая строка - заголовки, пропускаем
+            for (let i = 1; i < data.length; i++) {
+                const row = data[i];
+                if (row.length < 4) continue;
+
+                const rowUchastok = String(row[0]).trim();
+                const rowPhone = normalizePhone(String(row[1]).trim());
+                const rowFio = String(row[2]).trim().toLowerCase();
+                const rowStatus = String(row[3]).trim();
+
+                // Проверяем совпадение (нечувствительно к регистру для ФИО)
+                if (
+                    rowUchastok === uchastok &&
+                    rowPhone === phone &&
+                    rowFio.includes(fio.toLowerCase())
+                ) {
+                    return {
+                        fio: row[2],
+                        status: rowStatus,
+                        id: row[4] || ''
+                    };
+                }
+            }
+            
+            return null;
+        }
+
+        function showSuccess(user) {
+            resultDiv.innerHTML = `
+                <div class="result-title">
+                    ✓ Доступ разрешён
+                </div>
+                <div class="result-message">
+                    Добро пожаловать, ${user.fio}! Вам открыт доступ в группу.
+                </div>
+                <a href="${GROUP_LINK}" target="_blank" class="access-link">
+                    → Перейти в группу
+                </a>
+            `;
+            resultDiv.classList.remove('error');
+            resultDiv.classList.add('success');
+            resultDiv.style.display = 'block';
+        }
+
+        function showError(message) {
+            resultDiv.innerHTML = `
+                <div class="result-title">
+                    ✗ Доступ запрещён
+                </div>
+                <div class="result-message">
+                    ${message}
+                </div>
+            `;
