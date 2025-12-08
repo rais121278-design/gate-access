@@ -258,32 +258,17 @@
         <form id="accessForm">
             <div class="form-group">
                 <label for="uchastok">Номер участка</label>
-                <input 
-                    type="text" 
-                    id="uchastok" 
-                    placeholder="Например: 105" 
-                    required
-                >
+                <input type="text" id="uchastok" placeholder="Например: 105" required>
             </div>
 
             <div class="form-group">
                 <label for="phone">Номер телефона</label>
-                <input 
-                    type="tel" 
-                    id="phone" 
-                    placeholder="7999XXXXXXX" 
-                    required
-                >
+                <input type="tel" id="phone" placeholder="7999XXXXXXX" required>
             </div>
 
             <div class="form-group">
                 <label for="fio">ФИО</label>
-                <input 
-                    type="text" 
-                    id="fio" 
-                    placeholder="Ваше полное имя" 
-                    required
-                >
+                <input type="text" id="fio" placeholder="Ваше полное имя" required>
             </div>
 
             <button type="submit">Проверить доступ</button>
@@ -302,7 +287,7 @@
     </div>
 
     <script>
-        const SCRIPT_URL = 'https://script.googleapis.com/macros/d/AKfycbzQVkf9dq6YXTgItzqLiNy72qx7XQjB7XaiW8jeYF1ZZpeFXTXfEMLSItp7V9Jck4NhBA/usercoderun';
+        const CSV_URL = 'https://raw.githubusercontent.com/rais121278-design/gate-access/main/%D0%9B%D0%B8%D1%81%D1%821.csv';
         const GROUP_LINK = 'https://max.im/group/YOUR_GROUP_ID';
 
         const form = document.getElementById('accessForm');
@@ -320,39 +305,31 @@
             resultDiv.style.display = 'none';
 
             try {
-                const response = await fetch(SCRIPT_URL);
-                const rows = await response.json();
-                
+                const response = await fetch(CSV_URL);
+                const csvText = await response.text();
+                const rows = csvText.split('\n').map(row => row.split(','));
+
                 let found = false;
 
                 for (let i = 1; i < rows.length; i++) {
                     const row = rows[i];
                     if (!row || row.length < 4) continue;
 
-                    const rowUchastok = String(row[0] || '').trim();
-                    const rowPhone = String(row[1] || '').trim().replace(/\D/g, '');
-                    const rowFio = String(row[2] || '').trim().toLowerCase();
-                    const rowStatus = String(row[3] || '').trim();
+                    const rowUchastok = row[0]?.trim() || '';
+                    const rowPhone = (row[1]?.trim() || '').replace(/\D/g, '');
+                    const rowFio = (row[2]?.trim() || '').toLowerCase();
+                    const rowStatus = row[3]?.trim() || '';
 
                     const inputPhone = phone.replace(/\D/g, '');
 
-                    console.log('Проверка:', {
-                        rowUchastok, uchastok,
-                        rowPhone, inputPhone,
-                        rowFio, fio,
-                        rowStatus
-                    });
+                    console.log('Проверка:', { rowUchastok, uchastok, rowPhone, inputPhone, rowFio, fio, rowStatus });
 
-                    if (
-                        rowUchastok === uchastok &&
-                        rowPhone === inputPhone &&
-                        rowFio.includes(fio)
-                    ) {
+                    if (rowUchastok === uchastok && rowPhone === inputPhone && rowFio.includes(fio)) {
                         found = true;
                         loading.style.display = 'none';
 
                         if (rowStatus === 'В группе') {
-                            showSuccess(row[2] || 'Пользователь');
+                            showSuccess(row[2]?.trim() || 'Пользователь');
                         } else {
                             showError('Ваш доступ находится на рассмотрении. Пожалуйста, дождитесь подтверждения.');
                         }
@@ -374,15 +351,9 @@
 
         function showSuccess(fio) {
             resultDiv.innerHTML = `
-                <div class="result-title">
-                    ✓ Доступ разрешён
-                </div>
-                <div class="result-message">
-                    Добро пожаловать, ${fio}! Вам открыт доступ в группу.
-                </div>
-                <a href="${GROUP_LINK}" target="_blank" class="access-link">
-                    → Перейти в группу
-                </a>
+                <div class="result-title">✓ Доступ разрешён</div>
+                <div class="result-message">Добро пожаловать, ${fio}! Вам открыт доступ в группу.</div>
+                <a href="${GROUP_LINK}" target="_blank" class="access-link">→ Перейти в группу</a>
             `;
             resultDiv.classList.remove('error');
             resultDiv.classList.add('success');
@@ -391,12 +362,8 @@
 
         function showError(message) {
             resultDiv.innerHTML = `
-                <div class="result-title">
-                    ✗ Доступ запрещён
-                </div>
-                <div class="result-message">
-                    ${message}
-                </div>
+                <div class="result-title">✗ Доступ запрещён</div>
+                <div class="result-message">${message}</div>
             `;
             resultDiv.classList.remove('success');
             resultDiv.classList.add('error');
