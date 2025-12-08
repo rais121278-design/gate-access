@@ -320,48 +320,48 @@
             resultDiv.style.display = 'none';
 
             try {
-                const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+                // Используем корс-прокси для обхода CORS
+                const url = `https://cors-anywhere.herokuapp.com/https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
                 const response = await fetch(url);
-                const text = await response.text();
+                const csvText = await response.text();
                 
-                const json = JSON.parse(text.substring(47).slice(0, -2));
+                // Парсим CSV
+                const rows = csvText.split('\n').map(row => row.split(','));
                 
                 let found = false;
 
-                if (json.table && json.table.rows) {
-                    for (let i = 0; i < json.table.rows.length; i++) {
-                        const row = json.table.rows[i];
-                        if (!row.c || row.c.length < 4) continue;
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i];
+                    if (!row || row.length < 4) continue;
 
-                        const rowUchastok = String(row.c[0]?.v || '').trim();
-                        const rowPhone = String(row.c[1]?.v || '').trim().replace(/\D/g, '');
-                        const rowFio = String(row.c[2]?.v || '').trim().toLowerCase();
-                        const rowStatus = String(row.c[3]?.v || '').trim();
+                    const rowUchastok = row[0]?.trim() || '';
+                    const rowPhone = (row[1]?.trim() || '').replace(/\D/g, '');
+                    const rowFio = (row[2]?.trim() || '').toLowerCase();
+                    const rowStatus = row[3]?.trim() || '';
 
-                        const inputPhone = phone.replace(/\D/g, '');
+                    const inputPhone = phone.replace(/\D/g, '');
 
-                        console.log('Проверка:', {
-                            rowUchastok, uchastok,
-                            rowPhone, inputPhone,
-                            rowFio, fio,
-                            rowStatus
-                        });
+                    console.log('Проверка:', {
+                        rowUchastok, uchastok,
+                        rowPhone, inputPhone,
+                        rowFio, fio,
+                        rowStatus
+                    });
 
-                        if (
-                            rowUchastok === uchastok &&
-                            rowPhone === inputPhone &&
-                            rowFio.includes(fio)
-                        ) {
-                            found = true;
-                            loading.style.display = 'none';
+                    if (
+                        rowUchastok === uchastok &&
+                        rowPhone === inputPhone &&
+                        rowFio.includes(fio)
+                    ) {
+                        found = true;
+                        loading.style.display = 'none';
 
-                            if (rowStatus === 'В группе') {
-                                showSuccess(row.c[2]?.v || 'Пользователь');
-                            } else {
-                                showError('Ваш доступ находится на рассмотрении. Пожалуйста, дождитесь подтверждения.');
-                            }
-                            break;
+                        if (rowStatus === 'В группе') {
+                            showSuccess(row[2]?.trim() || 'Пользователь');
+                        } else {
+                            showError('Ваш доступ находится на рассмотрении. Пожалуйста, дождитесь подтверждения.');
                         }
+                        break;
                     }
                 }
 
