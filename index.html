@@ -5,220 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Контроль входа</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1e 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            color: #e0e0e0;
-        }
-        .container {
-            background: rgba(25, 25, 40, 0.95);
-            border: 1px solid rgba(76, 175, 80, 0.3);
-            border-radius: 16px;
-            padding: 48px;
-            width: 100%;
-            max-width: 420px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(76, 175, 80, 0.1);
-            backdrop-filter: blur(10px);
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        .logo {
-            font-size: 14px;
-            font-weight: 700;
-            letter-spacing: 2px;
-            color: #4caf50;
-            text-transform: uppercase;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        .logo::before {
-            content: "🔒";
-            font-size: 24px;
-        }
-        h1 {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            color: #ffffff;
-        }
-        .subtitle {
-            font-size: 13px;
-            color: #999;
-            margin-top: 8px;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #b0b0b0;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        input {
-            width: 100%;
-            padding: 14px 16px;
-            border: 1px solid rgba(76, 175, 80, 0.2);
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.05);
-            color: #e0e0e0;
-            font-size: 15px;
-            transition: all 0.3s ease;
-            font-family: inherit;
-        }
-        input:hover {
-            border-color: rgba(76, 175, 80, 0.4);
-            background: rgba(255, 255, 255, 0.08);
-        }
-        input:focus {
-            outline: none;
-            border-color: #4caf50;
-            background: rgba(76, 175, 80, 0.1);
-            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
-        }
-        input::placeholder {
-            color: #666;
-        }
-        button {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
-        }
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
-        }
-        button:active {
-            transform: translateY(0);
-        }
-        button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-            animation: pulse 1.5s ease-in-out infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 0.6; }
-            50% { opacity: 0.8; }
-        }
-        .result {
-            margin-top: 24px;
-            padding: 16px;
-            border-radius: 8px;
-            display: none;
-            animation: slideIn 0.3s ease;
-        }
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        .result.success {
-            background: rgba(76, 175, 80, 0.15);
-            border: 1px solid rgba(76, 175, 80, 0.4);
-            color: #81c784;
-        }
-        .result.error {
-            background: rgba(244, 67, 54, 0.15);
-            border: 1px solid rgba(244, 67, 54, 0.4);
-            color: #ef5350;
-        }
-        .result-title {
-            font-weight: 600;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .result-message {
-            font-size: 13px;
-            margin-bottom: 12px;
-            line-height: 1.5;
-        }
-        .access-link {
-            display: inline-block;
-            background: rgba(76, 175, 80, 0.25);
-            padding: 10px 14px;
-            border-radius: 6px;
-            color: #81c784;
-            text-decoration: none;
-            font-size: 12px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            word-break: break-all;
-        }
-        .access-link:hover {
-            background: rgba(76, 175, 80, 0.35);
-        }
-        .loading {
-            display: none;
-            text-align: center;
-            color: #4caf50;
-            margin-top: 16px;
-            font-size: 13px;
-        }
-        .spinner {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border: 2px solid rgba(76, 175, 80, 0.3);
-            border-top-color: #4caf50;
-            border-radius: 50%;
-            animation: spin 0.6s linear infinite;
-            margin-right: 6px;
-            vertical-align: middle;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        .footer {
-            text-align: center;
-            margin-top: 32px;
-            font-size: 12px;
-            color: #666;
-        }
-        @media (max-width: 480px) {
-            .container {
-                padding: 32px 24px;
-                margin: 16px;
-            }
-            h1 {
-                font-size: 24px;
-            }
-        }
+        * {margin:0;padding:0;box-sizing:border-box}
+        body{background:linear-gradient(135deg,#1a1a2e 0%,#0f0f1e 100%);min-height:100vh;display:flex;justify-content:center;align-items:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;color:#e0e0e0}
+        .container{background:rgba(25,25,40,.95);border:1px solid rgba(76,175,80,.3);border-radius:16px;padding:48px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.5),inset 0 1px 0 rgba(76,175,80,.1);backdrop-filter:blur(10px)}
+        .header{text-align:center;margin-bottom:40px}
+        .logo{font-size:14px;font-weight:700;letter-spacing:2px;color:#4caf50;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;justify-content:center;gap:8px}
+        .logo::before{content:"🔒";font-size:24px}
+        h1{font-size:28px;font-weight:700;margin-bottom:8px;color:#fff}
+        .subtitle{font-size:13px;color:#999;margin-top:8px}
+        .form-group{margin-bottom:20px}
+        label{display:block;font-size:13px;font-weight:600;margin-bottom:8px;color:#b0b0b0;text-transform:uppercase;letter-spacing:.5px}
+        input{width:100%;padding:14px 16px;border:1px solid rgba(76,175,80,.2);border-radius:8px;background:rgba(255,255,255,.05);color:#e0e0e0;font-size:15px;transition:all .3s ease;font-family:inherit}
+        input:hover{border-color:rgba(76,175,80,.4);background:rgba(255,255,255,.08)}
+        input:focus{outline:0;border-color:#4caf50;background:rgba(76,175,80,.1);box-shadow:0 0 0 3px rgba(76,175,80,.1)}
+        input::placeholder{color:#666}
+        button{width:100%;padding:14px;background:linear-gradient(135deg,#4caf50 0%,#45a049 100%);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;transition:all .3s ease;margin-top:12px;text-transform:uppercase;letter-spacing:.5px;box-shadow:0 4px 15px rgba(76,175,80,.3)}
+        button:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(76,175,80,.4)}
+        button:active{transform:translateY(0)}
+        button:disabled{opacity:.6;cursor:not-allowed;transform:none;animation:pulse 1.5s ease-in-out infinite}
+        @keyframes pulse{0%,100%{opacity:.6}50%{opacity:.8}}
+        .result{margin-top:24px;padding:16px;border-radius:8px;display:none;animation:slideIn .3s ease}
+        @keyframes slideIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+        .result.success{background:rgba(76,175,80,.15);border:1px solid rgba(76,175,80,.4);color:#81c784}
+        .result.error{background:rgba(244,67,54,.15);border:1px solid rgba(244,67,54,.4);color:#ef5350}
+        .result-title{font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+        .result-message{font-size:13px;margin-bottom:12px;line-height:1.5}
+        .access-link{display:inline-block;background:rgba(76,175,80,.25);padding:10px 14px;border-radius:6px;color:#81c784;text-decoration:none;font-size:12px;font-weight:600;transition:all .3s ease;word-break:break-all}
+        .access-link:hover{background:rgba(76,175,80,.35)}
+        .loading{display:none;text-align:center;color:#4caf50;margin-top:16px;font-size:13px}
+        .spinner{display:inline-block;width:12px;height:12px;border:2px solid rgba(76,175,80,.3);border-top-color:#4caf50;border-radius:50%;animation:spin .6s linear infinite;margin-right:6px;vertical-align:middle}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .footer{text-align:center;margin-top:32px;font-size:12px;color:#666}
+        @media (max-width:480px){.container{padding:32px 24px;margin:16px}h1{font-size:24px}}
     </style>
 </head>
 <body>
@@ -242,93 +60,19 @@
                 <input type="text" id="fio" placeholder="Ваше полное имя" required>
             </div>
             <button type="submit">Проверить доступ</button>
-            <div class="loading" id="loading">
-                <span class="spinner"></span>
-                <span>Проверка данных...</span>
-            </div>
+            <div class="loading" id="loading"><span class="spinner"></span><span>Проверка данных...</span></div>
         </form>
         <div class="result" id="result"></div>
-        <div class="footer">
-            <p>Защищённая система проверки доступа</p>
-        </div>
+        <div class="footer"><p>Защищённая система проверки доступа</p></div>
     </div>
     <script>
-        const CSV_URL = 'https://raw.githubusercontent.com/rais121278-design/gate-access/main/%D0%9B%D0%B8%D1%81%D1%821.csv';
-        const GROUP_LINK = 'https://t.me/joinchat/ВАШАЛИНК';
-        const form = document.getElementById('accessForm');
-        const resultDiv = document.getElementById('result');
-        const loading = document.getElementById('loading');
-        const submitButton = form.querySelector('button[type="submit"]');
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const uchastok = document.getElementById('uchastok').value.trim();
-            const phone = document.getElementById('phone').value.trim();
-            const fio = document.getElementById('fio').value.trim();
-            if (!uchastok || !phone || !fio) {
-                showError('Пожалуйста, заполните все поля');
-                return;
-            }
-            loading.style.display = 'block';
-            resultDiv.style.display = 'none';
-            submitButton.disabled = true;
-            submitButton.textContent = 'ОБРАБОТКА...';
-            try {
-                const response = await fetch(CSV_URL);
-                const csvText = await response.text();
-                const lines = csvText.split(/\r?\n/);
-                let found = false;
-                const inputPhone = phone.replace(/\D/g, '');
-                const inputFio = fio.toLowerCase();
-                for (let i = 1; i < lines.length; i++) {
-                    const line = lines[i].trim();
-                    if (!line) continue;
-                    const columns = line.split(',');
-                    if (columns.length < 4) continue;
-                    const rowUchastok = (columns[0] || '').trim();
-                    const rowPhone = (columns[1] || '').trim().replace(/\D/g, '');
-                    const rowFio = (columns[2] || '').trim().toLowerCase();
-                    const rowStatus = (columns[3] || '').trim();
-                    if (rowUchastok === uchastok && rowPhone === inputPhone && rowFio.indexOf(inputFio) !== -1) {
-                        found = true;
-                        loading.style.display = 'none';
-                        if (rowStatus === 'В группе') {
-                            showSuccess(columns[2].trim());
-                        } else {
-                            showError('Ваш доступ находится на рассмотрении. Пожалуйста, дождитесь подтверждения.');
-                        }
-                        break;
-                    }
-                }
-                if (!found) {
-                    loading.style.display = 'none';
-                    showError('Извините, ваши данные не совпадают с базой. Введите правильные данные.');
-                }
-            } catch (error) {
-                loading.style.display = 'none';
-                console.error('Ошибка:', error);
-                showError('Ошибка при проверке. Попробуйте позже.');
-            } finally {
-                submitButton.disabled = false;
-                submitButton.textContent = 'ПРОВЕРИТЬ ДОСТУП';
-            }
-        });
-        function showSuccess(fioName) {
-            resultDiv.innerHTML = '<div class="result-title">\u2713 Доступ разрешён</div><div class="result-message">Поздравляем, ' + fioName + '! Ваши данные есть в нашей базе. Вот доступ к чату!</div><a href="' + GROUP_LINK + '" target="_blank" class="access-link">\u2192 Перейти в группу</a>';
-            resultDiv.classList.remove('error');
-            resultDiv.classList.add('success');
-            resultDiv.style.display = 'block';
-        }
-        function showError(message) {
-            resultDiv.innerHTML = '<div class="result-title">\u2717 Доступ запрещён</div><div class="result-message">' + message + '</div>';
-            resultDiv.classList.remove('success');
-            resultDiv.classList.add('error');
-            resultDiv.style.display = 'block';
-        }
-        document.getElementById('phone').addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\D/g, '');
-            if (value.length > 11) value = value.slice(0, 11);
-            e.target.value = value;
-        });
+const CSV_URL='https://docs.google.com/spreadsheets/d/1feF7gt4FM7vuThl22c7e22_zklc5SndKj32EkAngb8I/export?format=csv&gid=0';
+const GROUP_LINK='https://t.me/joinchat/ВАШАЛИНК';
+const form=document.getElementById('accessForm'),resultDiv=document.getElementById('result'),loading=document.getElementById('loading'),submitButton=form.querySelector('button[type="submit"]');
+form.addEventListener('submit',async function(e){e.preventDefault();const uchastok=document.getElementById('uchastok').value.trim(),phone=document.getElementById('phone').value.trim(),fio=document.getElementById('fio').value.trim();if(!uchastok||!phone||!fio){showError('Пожалуйста, заполните все поля');return}loading.style.display='block';resultDiv.style.display='none';submitButton.disabled=true;submitButton.textContent='ОБРАБОТКА...';try{const response=await fetch(CSV_URL),csvText=await response.text(),lines=csvText.split(/\r?\n/);let found=false;const inputPhone=phone.replace(/\D/g,''),inputFio=fio.toLowerCase();for(let i=1;i<lines.length;i++){const line=lines[i].trim();if(!line)continue;const columns=line.split(',');if(columns.length<4)continue;const rowUchastok=(columns[0]||'').trim(),rowPhone=(columns[1]||'').trim().replace(/\D/g,''),rowFio=(columns[2]||'').trim().toLowerCase(),rowStatus=(columns[3]||'').trim();if(rowUchastok===uchastok&&rowPhone===inputPhone&&rowFio.indexOf(inputFio)!==-1){found=true;loading.style.display='none';if(rowStatus==='В группе'){showSuccess(columns[2].trim())}else{showError('Ваш доступ находится на рассмотрении. Пожалуйста, дождитесь подтверждения.')}break}}if(!found){loading.style.display='none';showError('Извините, ваши данные не совпадают с базой. Введите правильные данные.')}}catch(error){loading.style.display='none';console.error('Ошибка:',error);showError('Ошибка при проверке. Попробуйте позже.')}finally{submitButton.disabled=false;submitButton.textContent='ПРОВЕРИТЬ ДОСТУП'}});
+function showSuccess(fioName){resultDiv.innerHTML='<div class="result-title">✓ Доступ разрешён</div><div class="result-message">Поздравляем, '+fioName+'! Ваши данные есть в нашей базе. Вот доступ к чату!</div><a href="'+GROUP_LINK+'" target="_blank" class="access-link">→ Перейти в группу</a>';resultDiv.classList.remove('error');resultDiv.classList.add('success');resultDiv.style.display='block'}
+function showError(message){resultDiv.innerHTML='<div class="result-title">✗ Доступ запрещён</div><div class="result-message">'+message+'</div>';resultDiv.classList.remove('success');resultDiv.classList.add('error');resultDiv.style.display='block'}
+document.getElementById('phone').addEventListener('input',function(e){let value=e.target.value.replace(/\D/g,'');if(value.length>11)value=value.slice(0,11);e.target.value=value});
     </script>
 </body>
 </html>
