@@ -246,7 +246,6 @@
                 padding: 32px 24px;
                 margin: 16px;
             }
-
             h1 {
                 font-size: 24px;
             }
@@ -293,11 +292,10 @@
     </div>
 
     <script>
+        // ========== НАСТРОЙКИ ==========
         const CSV_URL = 'https://raw.githubusercontent.com/rais121278-design/gate-access/main/%D0%9B%D0%B8%D1%81%D1%821.csv';
-        const GROUP_LINK = 'https://max.im/group/YOUR_GROUP_ID';
-
-        // N8N Webhook URL
-        const WEBHOOK_URL = 'https://n8n.dewiar.com/webhook/6d28992b-ba37-4944-a5cc-f7bc3bc51e44';
+        const GROUP_LINK = 'https://t.me/+YOUR_INVITE_LINK_HERE'; // ← ЗАМЕНИТЕ НА ВАШУ ССЫЛКУ!
+        // ================================
 
         const form = document.getElementById('accessForm');
         const resultDiv = document.getElementById('result');
@@ -324,29 +322,7 @@
             submitButton.textContent = 'ОБРАБОТКА...';
 
             try {
-                // 1. ОТПРАВЛЯЕМ ДАННЫЕ В N8N (для записи в Google Sheets)
-                const currentDate = new Date().toLocaleDateString('ru-RU', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric'
-                });
-
-                const params = new URLSearchParams({
-                    uchastok: uchastok,
-                    phone: phone,
-                    fio: fio,
-                    status: 'Ожидает проверку',
-                    max_id: Date.now(),
-                    data_vhoda: currentDate
-                });
-
-                // Отправляем в n8n (не блокируем выполнение)
-                fetch(`${WEBHOOK_URL}?${params}`, {
-                    method: 'GET',
-                    headers: { 'Content-Type': 'application/json' }
-                }).catch(err => console.log('N8N запрос:', err));
-
-                // 2. ПРОВЕРЯЕМ ДОСТУП ПО CSV
+                // ПРОВЕРЯЕМ ДОСТУП ПО CSV
                 const response = await fetch(CSV_URL);
                 const csvText = await response.text();
                 const rows = csvText.split('\n').map(row => row.split(','));
@@ -364,13 +340,16 @@
                     const rowFio = (row[2]?.trim() || '').toLowerCase();
                     const rowStatus = row[3]?.trim() || '';
 
+                    // Проверяем совпадение
                     if (rowUchastok === uchastok && rowPhone === inputPhone && rowFio.includes(inputFio)) {
                         found = true;
                         loading.style.display = 'none';
 
                         if (rowStatus === 'В группе') {
+                            // ✅ ДОСТУП РАЗРЕШЕН
                             showSuccess(row[2]?.trim() || 'Пользователь');
                         } else {
+                            // ⏳ ОЖИДАЕТ ПОДТВЕРЖДЕНИЯ
                             showError('Ваш доступ находится на рассмотрении. Пожалуйста, дождитесь подтверждения.');
                         }
                         break;
@@ -378,8 +357,9 @@
                 }
 
                 if (!found) {
+                    // ❌ ДАННЫЕ НЕ НАЙДЕНЫ
                     loading.style.display = 'none';
-                    showError('Данные которые вы ввели не позволяют вас пригласить в чат!');
+                    showError('Извините, ваши данные не совпадают с базой. Введите правильные данные.');
                 }
 
             } catch (error) {
@@ -395,7 +375,7 @@
         function showSuccess(fioName) {
             resultDiv.innerHTML = `
                 <div class="result-title">✓ Доступ разрешён</div>
-                <div class="result-message">Добро пожаловать, ${fioName}! Вам открыт доступ в группу.</div>
+                <div class="result-message">Поздравляем, ${fioName}! Ваши данные есть в нашей базе. Вот доступ к чату!</div>
                 <a href="${GROUP_LINK}" target="_blank" class="access-link">→ Перейти в группу</a>
             `;
             resultDiv.classList.remove('error');
@@ -419,3 +399,6 @@
             if (value.length > 11) value = value.slice(0, 11);
             e.target.value = value;
         });
+    </script>
+</body>
+</html>
